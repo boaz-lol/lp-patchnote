@@ -3,7 +3,20 @@
 """
 
 import requests
-from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4 import BeautifulSoup, Tag
+
+class Updated(object):
+    def __init__(self):
+        self.type = ""
+        self.detail = ""
+        self.before = ""
+        self.after = ""
+
+class Champion(object):
+    def __init__ (self):
+        self.name = ""
+        self.update = []
+    
 
 url = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-14-4-notes/#patch-champions'
 
@@ -26,18 +39,39 @@ if response.status_code == 200:
             champions.append(c)
 
     for c in champions:
-        name  = ""
-        updated_list = []
-        updated_detail = []
+        new = Champion()
+        updated_ul = []
+        updated_li = []
+        
         if c.select_one('h3'):
-            name = c.select_one('h3').find('a').text
+            # 챔피언 이름
+            new.name = c.select_one('h3').find('a').text
+            print(new.name)
             
-            updated_list.append(c.select('h4').text)
-            updated_detail.append(c.select('ul'))
+            # 
+            for title in c.select('h4'):
+                updated_ul.append(title.text)
             
-            for title, detail in updated_list, updated_detail:
-                print(title)
-                print(detail)
+            for ul in c.select('ul'):
+                tmp = []
+                for li in ul.select('li'):
+                    item, modified = li.text.split(": ", 1)
+                    before, after = "", ""
+                    if " ⇒ " in modified:
+                        before, after = modified.split(" ⇒ ", 1)
+                    else:
+                        after = modified
+                    tmp.append([item, before, after])
+                updated_li.append(tmp)
+        else:
+            continue
+        
+        for i in range(len(updated_ul)):
+            print(updated_ul[i])
+            for l in updated_li[i]:
+                print(l)
+        
+        print()
             
         
 else: 
