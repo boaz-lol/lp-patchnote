@@ -55,79 +55,90 @@ class Champion(object):
         }
 
 
-url = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-14-6-notes/#patch-champions'
+URL = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-{v}-notes/#patch-champions'
 
-response = requests.get(url)
 
-update_list = []
-if response.status_code == 200:
-    html = response.text
-    soup = BeautifulSoup(html, 'html.parser')
 
-    container = soup.select_one('#patch-notes-container')
+version = [
+    "13-1", "13-2", "13-3", "13-4", "13-5", "13-6", "13-7", "13-8", "13-9", "13-10", "13-11", "13-12", "13-13", "13-14", "13-15", "13-16", "13-17", "13-18", "13-19", "13-20",
+    "13-21", "13-22", "13-23", "13-24", "14-1", "14-2", "14-3", "14-4", "14-5", "14-6",
+]
 
-    champions = []
-    isStarted = False
-    for c in container:
-        if c.name == 'header':
-            if c.select_one('h2').text == '챔피언':
-                isStarted = True
+for x in range(len(version)):
+    response = requests.get(URL.format(v=version[x]))
+    print(version[x], response)
+    update_list = []
+    if response.status_code == 200:
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+
+        container = soup.select_one('#patch-notes-container')
+
+        champions = []
+        isStarted = False
+        for c in container:
+            if c.name == 'header':
+                if c.select_one('h2').text == '챔피언':
+                    isStarted = True
+                else:
+                    isStarted = False
+
+            if isStarted and isinstance(c, Tag):
+                champions.append(c)
+
+        for c in champions:
+            new = Champion()
+            updated_ul = []
+            updated_li = []
+
+            if c.select_one('h3'):
+                # 챔피언 이름
+                champ = c.select_one('h3').find('a')
+                name = ""
+                update_type = ""
+                for child in champ.contents:
+                    if child.name == 'span':
+                        update_type = str(child)
+                    if not child.name == 'span':
+                        name += str(child)
+
+                new.__set_name__(name)
+                new.__set_type__(update_type)
+
+                # 챔피언 업데이트 스텟
+                for title in c.select('h4'):
+                    updated_ul.append(title.text)
+
+                for ul in c.select('ul'):
+                    tmp = []
+                    for li in ul.select('li'):
+                        if ":" not in li.text:
+                            continue
+                        item, modified = li.text.split(": ", 1)
+                        before, after = "", ""
+                        if " ⇒ " in modified:
+                            before, after = modified.split(" ⇒ ", 1)
+                        else:
+                            after = modified
+                        tmp.append([item, before, after])
+                    updated_li.append(tmp)
             else:
-                isStarted = False
+                continue
 
-        if isStarted and isinstance(c, Tag):
-            champions.append(c)
+            for i in range(len(updated_ul)):
+                update = Update(updated_ul[i])
+                for l in updated_li[i]:
+                    update.__add__(Item(l[0], l[1], l[2]))
 
-    for c in champions:
-        new = Champion()
-        updated_ul = []
-        updated_li = []
+                new.__add__(update)
 
-        if c.select_one('h3'):
-            # 챔피언 이름
-            champ = c.select_one('h3').find('a')
-            name = ""
-            update_type = ""
-            for child in champ.contents:
-                if child.name == 'span':
-                    update_type = str(child)
-                if not child.name == 'span':
-                    name += str(child)
+            update_list.append(new.__dict__())
 
-            new.__set_name__(name)
-            new.__set_type__(update_type)
+        file_path = "./champion_init/{version}.json"
+        with open(file_path.format(version=version[x]), 'w', encoding='utf-8') as file:
+            json.dumps(update_list, indent="\t", ensure_ascii=False)
+
+    else:
+        print(response.status_code)
 
 
-            # 챔피언 업데이트 스텟
-            for title in c.select('h4'):
-                updated_ul.append(title.text)
-
-            for ul in c.select('ul'):
-                tmp = []
-                for li in ul.select('li'):
-                    if ":" not in li.text:
-                        continue
-                    item, modified = li.text.split(": ", 1)
-                    before, after = "", ""
-                    if " ⇒ " in modified:
-                        before, after = modified.split(" ⇒ ", 1)
-                    else:
-                        after = modified
-                    tmp.append([item, before, after])
-                updated_li.append(tmp)
-        else:
-            continue
-
-        for i in range(len(updated_ul)):
-            update = Update(updated_ul[i])
-            for l in updated_li[i]:
-                update.__add__(Item(l[0], l[1], l[2]))
-
-            new.__add__(update)
-
-        update_list.append(new.__dict__())
-
-    print(json.dumps(update_list, indent="\t", ensure_ascii=False))
-
-else:
-    print(response.status_code)
