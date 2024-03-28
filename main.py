@@ -35,6 +35,7 @@ class Update(object):
 class Champion(object):
     def __init__(self):
         self.name = ""
+        self.type = ""
         self.updates = []
 
     def __set_name__(self, name):
@@ -43,14 +44,18 @@ class Champion(object):
     def __add__(self, update):
         self.updates.append(update)
 
+    def __set_type__(self, type):
+        self.type = type
+
     def __dict__(self):
         return {
             'name': self.name,
+            'type': self.type,
             'updates': [update.__dict__() for update in self.updates]
         }
 
 
-url = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-14-4-notes/#patch-champions'
+url = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-14-6-notes/#patch-champions'
 
 response = requests.get(url)
 
@@ -80,7 +85,18 @@ if response.status_code == 200:
 
         if c.select_one('h3'):
             # 챔피언 이름
-            new.__set_name__(c.select_one('h3').find('a').text)
+            champ = c.select_one('h3').find('a')
+            name = ""
+            update_type = ""
+            for child in champ.contents:
+                if child.name == 'span':
+                    update_type = str(child)
+                if not child.name == 'span':
+                    name += str(child)
+
+            new.__set_name__(name)
+            new.__set_type__(update_type)
+
 
             # 챔피언 업데이트 스텟
             for title in c.select('h4'):
@@ -89,6 +105,8 @@ if response.status_code == 200:
             for ul in c.select('ul'):
                 tmp = []
                 for li in ul.select('li'):
+                    if ":" not in li.text:
+                        continue
                     item, modified = li.text.split(": ", 1)
                     before, after = "", ""
                     if " ⇒ " in modified:
