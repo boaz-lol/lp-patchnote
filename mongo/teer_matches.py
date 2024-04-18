@@ -3,8 +3,8 @@
 import requests
 import json
 
-api_key=
-account = requests.get("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/%EA%B1%B4%EC%95%BC%ED%98%B8/%EA%B3%A0%EC%96%91%EC%9D%B4?api_key=RGAPI-91eeeae0-fb5b-4605-a818-96b93eef6994").json()
+api_key=""
+account = requests.get("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/%EA%B1%B4%EC%95%BC%ED%98%B8/%EA%B3%A0%EC%96%91%EC%9D%B4?api_key={api_key}".format(api_key=api_key)).json()
 account_puid = account["puuid"]
 print(account)
 
