@@ -7,12 +7,17 @@ https://ddragon.leagueoflegends.com/cdn/12.1.1/data/ko_KR/champion/Aatrox.json
 import requests
 import json
 
-champions = requests.get("https://ddragon.leagueoflegends.com/cdn/12.23.1/data/ko_KR/champion.json").json()["data"]
-champion_datail_url = "https://ddragon.leagueoflegends.com/cdn/12.23.1/data/ko_KR/champion/{name}.json"
+champions = requests.get("https://ddragon.leagueoflegends.com/cdn/14.8.1/data/ko_KR/champion.json").json()["data"]
+
+for c in champions:
+    print(champions[c])
+
+
+"""champion_datail_url = "https://ddragon.leagueoflegends.com/cdn/12.23.1/data/ko_KR/champion/{name}.json"
 file_path = "./champion_init/{name}.json"
 
 for c in champions:
     data = requests.get(champion_datail_url.format(name=c)).json()
     print(data)
     with open(file_path.format(name=c), 'w', encoding='utf-8') as file:
-        json.dump(data, file, indent="\t", ensure_ascii=False)
+        json.dump(data, file, indent="\t", ensure_ascii=False)"""

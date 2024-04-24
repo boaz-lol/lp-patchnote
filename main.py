@@ -59,10 +59,11 @@ URL = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-{v}-notes/#
 
 
 
-version = [
+version = ["14-7"]
+"""[
     "13-1", "13-1B", "13-3", "13-4", "13-5", "13-6", "13-7", "13-8", "13-9", "13-10", "13-11", "13-12", "13-13", "13-14", "13-15", "13-16", "13-17", "13-18", "13-19", "13-20",
     "13-21", "13-22", "13-23", "13-24", "14-1", "14-2", "14-3", "14-4", "14-5", "14-6",
-]
+]"""
 
 for x in range(len(version)):
     response = requests.get(URL.format(v=version[x]))
@@ -102,6 +103,7 @@ for x in range(len(version)):
                     if not child.name == 'span':
                         name += str(child)
 
+                print(name)
                 new.__set_name__(name)
                 new.__set_type__(update_type)
 
