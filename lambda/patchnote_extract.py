@@ -1,6 +1,9 @@
+import json
+
 import requests
 from bs4 import BeautifulSoup, Tag
-import json
+import csv
+import re
 
 
 class Item(object):
@@ -55,14 +58,50 @@ class Champion(object):
         }
 
 
-URL = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-{v}-notes/#patch-champions'
+# 1. 가장 최근 크롤링한 버전 load
+f = open("patch.csv", "r")
+reader = list(csv.DictReader(f))
+season = reader[-1]["season"]
+version = reader[-1]["version"]
+expect_version = str(int(version) + 1)
+subversion = reader[-1]["subversion"]
 
+# 2. 패치 버전 업데이트 여부 관리
+subVersionUpdated = False
+mainVersionUpdated = False
 
+url = "https://www.leagueoflegends.com/ko-kr/news/tags/patch-notes/"
+response = requests.get(url)
+homepage_last_update_version_text = ""
+if response.status_code == 200:
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+    ol = soup.select_one('#gatsby-focus-wrapper > div > div.style__Wrapper-sc-1ynvx8h-0.style__ResponsiveWrapper-sc'
+                         '-1ynvx8h-6.bNRNtU.dzWqHp > div > '
+                         'div.style__Wrapper-sc-106zuld-0.style__ResponsiveWrapper-sc-106zuld-4.enQqER.jYHLfd'
+                         '.style__List-sc-1ynvx8h-3.qfKFn > div > ol')
+    versions = ol.select('li > a > article > div.style__Info-sc-1h41bzo-6.eBtwVi > div > h2')
+    homepage_last_update_version_text = versions[0].get_text()
 
-version = ["14-9"]
+homepage_last_subversion = subversion
+if homepage_last_update_version_text[0] == '[':
+    homepage_last_subversion = re.findall(r'\d+', homepage_last_update_version_text.split(" ")[0])
+    if int(homepage_last_subversion[0]) > int(subversion):
+        subVersionUpdated = True
 
-for x in range(len(version)):
-    response = requests.get(URL.format(v=version[x]))
+if "{season}.{version}".format(season=season, version=expect_version) in homepage_last_update_version_text:
+    homepage_last_subversion = 0
+    mainVersionUpdated = True
+
+patch_version = ""
+if subVersionUpdated:
+    patch_version = "{season}-{version}".format(season=season, version=version)
+elif mainVersionUpdated:
+    patch_version = "{season}-{version}".format(season=season, version=expect_version)
+
+if len(patch_version) != 0:
+    patch_note_url = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-{v}-notes/#patch-champions'
+    response = requests.get(patch_note_url.format(v=patch_version))
     update_list = []
     if response.status_code == 200:
         html = response.text
@@ -129,8 +168,6 @@ for x in range(len(version)):
                 new.__add__(update)
 
             update_list.append(new.__dict__())
-    file_path = "./champion_init/{version}.json"
-    with open(file_path.format(version=version[x]), 'w', encoding='utf-8') as file:
+    file_path = "./{version}-{sub}.json"
+    with open(file_path.format(version=patch_version, sub=homepage_last_subversion), 'w', encoding='utf-8') as file:
         json.dump(update_list, file, indent="\t", ensure_ascii=False)
-
-
