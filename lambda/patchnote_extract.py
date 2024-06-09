@@ -76,15 +76,14 @@ homepage_last_update_version_text = ""
 if response.status_code == 200:
     html = response.text
     soup = BeautifulSoup(html, 'html.parser')
-    ol = soup.select_one('#gatsby-focus-wrapper > div > div.style__Wrapper-sc-1ynvx8h-0.style__ResponsiveWrapper-sc'
-                         '-1ynvx8h-6.bNRNtU.dzWqHp > div > '
-                         'div.style__Wrapper-sc-106zuld-0.style__ResponsiveWrapper-sc-106zuld-4.enQqER.jYHLfd'
-                         '.style__List-sc-1ynvx8h-3.qfKFn > div > ol')
-    versions = ol.select('li > a > article > div.style__Info-sc-1h41bzo-6.eBtwVi > div > h2')
-    homepage_last_update_version_text = versions[0].get_text()
+    div = soup.select_one('#news > div > div.grid-content > div')
+    versions = div.select('a')
+    homepage_last_update_version_text = versions[0].get('aria-label')
+
+homepage_last_update_version_text_list = homepage_last_update_version_text.split(" ")
 
 homepage_last_subversion = subversion
-if homepage_last_update_version_text[0] == '[':
+if homepage_last_update_version_text_list[0][0] == '[':
     homepage_last_subversion = re.findall(r'\d+', homepage_last_update_version_text.split(" ")[0])
     if int(homepage_last_subversion[0]) > int(subversion):
         subVersionUpdated = True
@@ -98,6 +97,7 @@ if subVersionUpdated:
     patch_version = "{season}-{version}".format(season=season, version=version)
 elif mainVersionUpdated:
     patch_version = "{season}-{version}".format(season=season, version=expect_version)
+
 
 if len(patch_version) != 0:
     patch_note_url = 'https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-{v}-notes/#patch-champions'
