@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+from datetime import datetime
 
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -29,7 +30,9 @@ if __name__ == '__main__':
         match_data = requests.get(match_info_url.format(match_id=match, api_key=api_key)).json()
         match_participants = match_data["info"]["participants"]
         for participant_num in range(len(match_participants)):
-            participant_match_data = {}
+            # GET 날린 user puuid, 날짜 추가"
+            participant_match_data = { "query_user_id": account_puid }
+            participant_match_data["query_date"] = datetime.now()
             participant_match_data["match_id"] = match
             participant_match_data["puuid"] = match_data["info"]["participants"][participant_num]["puuid"]
             participant_match_data["role"] = match_data["info"]["participants"][participant_num]["role"]
