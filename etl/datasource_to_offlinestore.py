@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -31,7 +31,7 @@ if __name__ == '__main__':
         match_participants = match_data["info"]["participants"]
         for participant_num in range(len(match_participants)):
             # GET 날린 user puuid, 날짜 추가"
-            participant_match_data = { "query_user_id": account_puid }
+            participant_match_data = { "query_game_name": account["gameName"] }
             participant_match_data["query_date"] = datetime.now()
             participant_match_data["match_id"] = match
             participant_match_data["puuid"] = match_data["info"]["participants"][participant_num]["puuid"]
@@ -51,10 +51,20 @@ if __name__ == '__main__':
             print(f"Document inserted with _id: {inserted_id}")
 
     # extract documents from MongoDB and write parquet on S3
-    # documents = collection.find()
 
-    # # 조회한 도큐먼트 출력
-    # for document in documents:
-    #     print(document)
+    today = datetime.now().date()
+    start_date = datetime(today.year, today.month, today.day)
+    end_date = start_date + timedelta(days=1)
+
+    query = {
+        "query_game_name": "건야호",
+        "query_date": {
+            "$gte": start_date,
+            "$lt": end_date
+        }
+    }
+    documents = collection.find(query)
+    for document in documents:
+        print(document)
 
     
