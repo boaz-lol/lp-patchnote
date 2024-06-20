@@ -27,11 +27,11 @@ if __name__ == '__main__':
 
     # Load Model from MLFlow
     mlflow.set_tracking_uri(uri="http://13.209.9.231:5000")
-    model_uri = "models:/extra-test-0620/1"  # 버전 번호에 따라 수정 필요
+    model_uri = "models:/extra-test-0620/2"  # 버전 번호에 따라 수정 필요
     loaded_model = mlflow.sklearn.load_model(model_uri)
 
     # Make Inference
-    X = df.drop(['win', 'match_id',"puuid","query_game_name","query_date"], axis=1)  
+    X = df.drop(['win', 'match_id',"puuid","query_game_name","query_date",'championId','championId'], axis=1)  
     encoder = LabelEncoder()
     X["role"] = encoder.fit_transform(X['role'])
     scaler = StandardScaler() 
