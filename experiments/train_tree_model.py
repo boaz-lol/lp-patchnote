@@ -12,7 +12,7 @@ if __name__ == '__main__':
     csv_file_path = "user_1_match_10.csv"
 
     # Load Data
-    df = pd.read_csv(csv_file_path)
+    df = pd.read_csv(csv_file_path, index_col = 0)
 
     # Transform Data
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     df['puuid'] = encoder.fit_transform(df['puuid']) 
 
     # Transform 2.  Split feature & target data
-    X = df.drop(['win', 'match_id'], axis=1)  
+    X = df.drop(['win', 'match_id','puuid'], axis=1)  
     y = df ['win']
 
     # Transform 3. Split train & test
